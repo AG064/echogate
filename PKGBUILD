@@ -8,13 +8,22 @@ arch=('any')
 url="https://github.com/AG064/echogate"
 license=('GPL3')
 depends=('python' 'python-sounddevice' 'espeak-ng')
-makedepends=('python-pip' 'curl' 'unzip')
-source=("echogate.py")
-sha256sums=('SKIP')
+makedepends=('python-pip' 'unzip')
+source=("echogate.py"
+        "vosk-model-small-en-us-0.15.zip::https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip")
+sha256sums=('SKIP'
+            'SKIP')
+noextract=('vosk-model-small-en-us-0.15.zip')
 
-# Vosk model URL (small English model)
-_vosk_model_url="https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
 _vosk_model_name="vosk-model-small-en-us-0.15"
+
+build() {
+    # Install vosk to a local directory for packaging
+    pip install --target="${srcdir}/vosk-libs" --no-deps vosk
+
+    # Extract the vosk model
+    unzip -q "${srcdir}/vosk-model-small-en-us-0.15.zip" -d "${srcdir}"
+}
 
 package() {
     # Create installation directories
@@ -22,12 +31,10 @@ package() {
     install -dm755 "${pkgdir}/opt/echogate/model"
     install -dm755 "${pkgdir}/usr/bin"
 
-    # Install vosk to custom libs directory
-    pip install --target="${pkgdir}/opt/echogate/libs" --no-deps vosk
+    # Install vosk libraries
+    cp -r "${srcdir}/vosk-libs"/* "${pkgdir}/opt/echogate/libs/"
 
-    # Download and extract vosk model
-    curl -L -o "${srcdir}/vosk-model.zip" "${_vosk_model_url}"
-    unzip -q "${srcdir}/vosk-model.zip" -d "${srcdir}"
+    # Install vosk model
     cp -r "${srcdir}/${_vosk_model_name}"/* "${pkgdir}/opt/echogate/model/"
 
     # Install main script

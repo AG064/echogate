@@ -45,20 +45,44 @@ def speak_digits(digits):
     """Speak the given digits using espeak-ng."""
     # Speak each digit separately for clarity
     text = " ".join(digits)
-    subprocess.run(["espeak-ng", text], check=True)
+    try:
+        subprocess.run(["espeak-ng", text], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to run espeak-ng: {e}", file=sys.stderr)
+        sys.exit(1)
+    except FileNotFoundError:
+        print("Error: espeak-ng not found. Please install espeak-ng.", file=sys.stderr)
+        sys.exit(1)
 
 
 def listen_for_speech(duration=LISTEN_DURATION):
     """Listen for speech and return recognized text."""
-    model = Model(MODEL_PATH)
+    # Load the speech recognition model
+    if not os.path.isdir(MODEL_PATH):
+        print(f"Error: Model not found at {MODEL_PATH}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        model = Model(MODEL_PATH)
+    except Exception as e:
+        print(f"Error: Failed to load speech model: {e}", file=sys.stderr)
+        sys.exit(1)
+
     recognizer = KaldiRecognizer(model, SAMPLE_RATE)
 
     # Calculate the number of samples to record
     num_samples = int(duration * SAMPLE_RATE)
 
     # Record audio
-    audio = sd.rec(num_samples, samplerate=SAMPLE_RATE, channels=1, dtype="int16")
-    sd.wait()
+    try:
+        audio = sd.rec(num_samples, samplerate=SAMPLE_RATE, channels=1, dtype="int16")
+        sd.wait()
+    except sd.PortAudioError as e:
+        print(f"Error: Audio device error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to record audio: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Process the recorded audio
     recognizer.AcceptWaveform(audio.tobytes())
