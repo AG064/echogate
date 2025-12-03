@@ -7,7 +7,7 @@ pkgdesc="Voice-based authentication using speech recognition"
 arch=('any')
 url="https://github.com/AG064/echogate"
 license=('GPL3')
-depends=('python' 'python-sounddevice' 'espeak-ng')
+depends=('python' 'python-sounddevice' 'espeak-ng' 'tk')
 makedepends=('python-pip' 'unzip')
 source=("echogate.py"
         "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip")
