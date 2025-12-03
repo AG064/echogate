@@ -20,9 +20,8 @@ import sys
 import os
 
 # Add custom library path for vosk installed via pip
-LIBS_PATH = "/opt/echogate/libs"
-if os.path.isdir(LIBS_PATH):
-    sys.path.insert(0, LIBS_PATH)
+sys.path.append("/opt/echogate/libs")
+MODEL_PATH = "/opt/echogate/model"
 
 import random
 import subprocess
@@ -30,8 +29,6 @@ import json
 
 import sounddevice as sd
 from vosk import Model, KaldiRecognizer
-
-MODEL_PATH = "/opt/echogate/model"
 SAMPLE_RATE = 16000
 LISTEN_DURATION = 5  # seconds
 
