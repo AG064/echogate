@@ -26,12 +26,15 @@ MODEL_PATH = "/opt/echogate/model"
 import random
 import subprocess
 import json
+import time
 
 import sounddevice as sd
 from vosk import Model, KaldiRecognizer
 
 SAMPLE_RATE = 16000
 LISTEN_DURATION = 5  # seconds
+GUI_WIDTH = 400
+GUI_HEIGHT = 150
 
 # GUI globals
 gui_root = None
@@ -63,7 +66,7 @@ def should_use_gui():
 
 
 def create_gui():
-    """Create the GUI window in a separate thread."""
+    """Create the GUI window."""
     global gui_root, gui_label, gui_running
     
     try:
@@ -80,13 +83,11 @@ def create_gui():
     gui_root.overrideredirect(True)
     
     # Set window size and center on screen
-    window_width = 400
-    window_height = 150
     screen_width = gui_root.winfo_screenwidth()
     screen_height = gui_root.winfo_screenheight()
-    x = (screen_width - window_width) // 2
-    y = (screen_height - window_height) // 2
-    gui_root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+    x = (screen_width - GUI_WIDTH) // 2
+    y = (screen_height - GUI_HEIGHT) // 2
+    gui_root.geometry(f"{GUI_WIDTH}x{GUI_HEIGHT}+{x}+{y}")
     
     # Cyberpunk/Lain style: black background, green text
     gui_root.configure(bg="black")
@@ -262,7 +263,6 @@ def main():
             else:
                 update_gui("ACCESS DENIED")
             # Brief pause to show result
-            import time
             time.sleep(1)
             close_gui()
         
