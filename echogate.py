@@ -2,6 +2,13 @@
 """
 EchoGate - Voice-based authentication for Arch Linux
 
+NOTE: This is a challenge-response voice authentication system. It verifies
+that the user can repeat spoken digits, but does NOT perform speaker
+verification (voiceprint matching). Any person who can hear and repeat the
+digits can authenticate. This is intended as a convenience/accessibility
+layer, not as a standalone security mechanism. Always use in combination
+with other authentication factors (e.g., password via PAM fallback).
+
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -23,7 +30,7 @@ import os
 sys.path.append("/opt/echogate/libs")
 MODEL_PATH = "/opt/echogate/model"
 
-import random
+import secrets
 import subprocess
 import json
 import time
@@ -68,30 +75,30 @@ def should_use_gui():
 def create_gui():
     """Create the GUI window."""
     global gui_root, gui_label, gui_running
-    
+
     try:
         import tkinter as tk
     except ImportError:
         return False
-    
+
     gui_running = True
-    
+
     gui_root = tk.Tk()
     gui_root.title("EchoGate")
-    
+
     # Remove window decorations for overlay effect
     gui_root.overrideredirect(True)
-    
+
     # Set window size and center on screen
     screen_width = gui_root.winfo_screenwidth()
     screen_height = gui_root.winfo_screenheight()
     x = (screen_width - GUI_WIDTH) // 2
     y = (screen_height - GUI_HEIGHT) // 2
     gui_root.geometry(f"{GUI_WIDTH}x{GUI_HEIGHT}+{x}+{y}")
-    
+
     # Cyberpunk/Lain style: black background, green text
     gui_root.configure(bg="black")
-    
+
     # Create main label
     gui_label = tk.Label(
         gui_root,
@@ -101,10 +108,10 @@ def create_gui():
         bg="black"
     )
     gui_label.pack(expand=True, fill="both")
-    
+
     # Keep window on top
     gui_root.attributes("-topmost", True)
-    
+
     return True
 
 
@@ -113,9 +120,10 @@ def update_gui(message):
     global gui_root, gui_label
     if gui_root and gui_label:
         try:
+            import tkinter as tk
             gui_label.config(text=message)
             gui_root.update()
-        except Exception:
+        except (tk.TclError, AttributeError):
             pass
 
 
@@ -124,57 +132,55 @@ def close_gui():
     global gui_root, gui_running
     if gui_root:
         try:
+            import tkinter as tk
             gui_root.destroy()
-        except Exception:
+        except (tk.TclError, AttributeError):
             pass
     gui_running = False
 
 
 def generate_digits(count=3):
-    """Generate a string of random digits."""
-    return "".join(str(random.randint(0, 9)) for _ in range(count))
+    """Generate a string of cryptographically secure random digits."""
+    return "".join(str(secrets.randbelow(10)) for _ in range(count))
 
 
-def speak_digits(digits, use_gui=False):
+def speak_digits(digits):
     """Speak the given digits using espeak-ng."""
     # Speak each digit separately for clarity
     text = " ".join(digits)
-    
-    if use_gui:
-        update_gui(f"SAY: {text}")
-    
+
+    update_gui(f"SAY: {text}")
+
     try:
-        subprocess.run(["espeak-ng", text], check=True)
+        subprocess.run(
+            ["espeak-ng", text], check=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
     except subprocess.CalledProcessError as e:
         print(f"Error: Failed to run espeak-ng: {e}", file=sys.stderr)
-        if use_gui:
-            close_gui()
+        close_gui()
         sys.exit(1)
     except FileNotFoundError:
         print("Error: espeak-ng not found. Please install espeak-ng.", file=sys.stderr)
-        if use_gui:
-            close_gui()
+        close_gui()
         sys.exit(1)
 
 
-def listen_for_speech(duration=LISTEN_DURATION, use_gui=False):
+def listen_for_speech(duration=LISTEN_DURATION):
     """Listen for speech and return recognized text."""
-    if use_gui:
-        update_gui("Listening...")
-    
+    update_gui("Listening...")
+
     # Load the speech recognition model
     if not os.path.isdir(MODEL_PATH):
         print(f"Error: Model not found at {MODEL_PATH}", file=sys.stderr)
-        if use_gui:
-            close_gui()
+        close_gui()
         sys.exit(1)
 
     try:
         model = Model(MODEL_PATH)
     except Exception as e:
         print(f"Error: Failed to load speech model: {e}", file=sys.stderr)
-        if use_gui:
-            close_gui()
+        close_gui()
         sys.exit(1)
 
     recognizer = KaldiRecognizer(model, SAMPLE_RATE)
@@ -188,13 +194,11 @@ def listen_for_speech(duration=LISTEN_DURATION, use_gui=False):
         sd.wait()
     except sd.PortAudioError as e:
         print(f"Error: Audio device error: {e}", file=sys.stderr)
-        if use_gui:
-            close_gui()
+        close_gui()
         sys.exit(1)
     except Exception as e:
         print(f"Error: Failed to record audio: {e}", file=sys.stderr)
-        if use_gui:
-            close_gui()
+        close_gui()
         sys.exit(1)
 
     # Process the recorded audio
@@ -221,16 +225,16 @@ def extract_digits(text):
     return "".join(digits)
 
 
-def run_auth(use_gui=False):
-    """Run the authentication process."""
+def run_auth():
+    """Run the authentication process (assumes GUI is active)."""
     # Generate random digits
     expected_digits = generate_digits(3)
 
     # Speak the digits
-    speak_digits(expected_digits, use_gui)
+    speak_digits(expected_digits)
 
     # Listen for user response
-    recognized_text = listen_for_speech(LISTEN_DURATION, use_gui)
+    recognized_text = listen_for_speech(LISTEN_DURATION)
 
     # Extract digits from recognized speech
     recognized_digits = extract_digits(recognized_text)
@@ -241,37 +245,32 @@ def run_auth(use_gui=False):
 
 def main():
     """Main entry point."""
-    use_gui = should_use_gui()
-    
     # If running in TTY/sudo session, exit immediately to fall back to password
-    if not use_gui:
+    if not should_use_gui():
         sys.exit(1)
-    
+
     # Create and show GUI
-    if use_gui:
-        if not create_gui():
-            # If GUI creation fails, exit to fall back to password
-            sys.exit(1)
-    
+    if not create_gui():
+        # If GUI creation fails, exit to fall back to password
+        sys.exit(1)
+
     try:
         # Run authentication
-        success = run_auth(use_gui)
-        
-        if use_gui:
-            if success:
-                update_gui("ACCESS GRANTED")
-            else:
-                update_gui("ACCESS DENIED")
-            # Brief pause to show result
-            time.sleep(1)
-            close_gui()
-        
+        success = run_auth()
+
+        if success:
+            update_gui("ACCESS GRANTED")
+        else:
+            update_gui("ACCESS DENIED")
+        # Brief pause to show result
+        time.sleep(1)
+        close_gui()
+
         sys.exit(0 if success else 1)
-        
+
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
-        if use_gui:
-            close_gui()
+        close_gui()
         sys.exit(1)
 
 

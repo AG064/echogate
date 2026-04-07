@@ -24,8 +24,8 @@ package() {
     install -dm755 "${pkgdir}/opt/echogate/model"
     install -dm755 "${pkgdir}/usr/bin"
 
-    # Install vosk to custom libs directory
-    pip install vosk --target="${pkgdir}/opt/echogate/libs" --no-deps --ignore-installed --no-cache-dir
+    # Install vosk to custom libs directory (pinned version for reproducibility)
+    pip install vosk==0.3.45 --target="${pkgdir}/opt/echogate/libs" --no-deps --ignore-installed --no-cache-dir
 
     # Extract and install the vosk model
     unzip -q "${srcdir}/vosk-model-small-en-us-0.15.zip" -d "${srcdir}"
