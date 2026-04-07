@@ -1,6 +1,6 @@
 # EchoGate
 
-**Echogate** is your entry point into the wired. Strong biometric authentication and encrypted access using your voice. Works fully offline.
+**Echogate** is your entry point into the wired. Voice-based challenge-response authentication using your voice. Works fully offline.
 
 ## The "Why"
 
@@ -56,9 +56,8 @@ echogate/
 ├── README.md          # This file
 ├── SOURCES.md         # Detailed references and bibliography
 ├── LICENSE            # GPLv3
-├── echo_gate.py       # Main authentication script
-├── pam_auth.py        # PAM integration
-└── requirements.txt   # Python dependencies (vosk, espeak-ng)
+├── echogate.py        # Main authentication script
+├── PKGBUILD           # Arch Linux package build
 ```
 
 ## Dependencies
