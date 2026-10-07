@@ -1,12 +1,19 @@
 # EchoGate
 
-**Echogate** is your entry point into the wired. Voice-based challenge-response authentication using your voice. Works fully offline.
+EchoGate is an offline spoken-digit challenge for accessibility experiments. It
+recognizes the words spoken, not the identity of the speaker. Any person who can
+read or hear the challenge can answer it.
+
+It is not a biometric identity verifier. Keep a normal password or another verified
+authentication factor. Do not configure this challenge as a sufficient standalone
+PAM login factor. The script's successful exit means only that the challenge matched.
 
 ## The "Why"
 
 ### Replay Attack Protection
 
-As documented by Sarabjeet Singh & Yamini M. in their [IEEE paper (2013)](https://ieeexplore.ieee.org/document/...), ordinary voice recording can easily bypass biometric systems. Using a **Random Pass-phrase** guarantees the physical presence of the user at login time.
+A random challenge changes the words required for each attempt. This does not prove
+speaker identity or physical presence and does not prevent synthetic or spliced audio.
 
 ### Inclusivity
 
