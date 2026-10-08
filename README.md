@@ -21,7 +21,7 @@ As Stephen Cook notes in his [Speech Recognition HOWTO (2002)](http://tldp.org/H
 
 ### Privacy
 
-Unlike modern cloud solutions, EchoGate works **completely offline** — no voice samples are ever sent to external servers.
+Unlike modern cloud solutions, EchoGate works **completely offline** â€” no voice samples are ever sent to external servers.
 
 ## Technical Details
 
@@ -29,7 +29,7 @@ Unlike modern cloud solutions, EchoGate works **completely offline** — no voic
 
 Following the HOWTO recommendations:
 - Mono signal, 16-bit depth, 16kHz sample rate
-- Optimal for human speech (100Hz–8kHz range)
+- Optimal for human speech (100Hzâ€“8kHz range)
 
 ### Algorithm: Challenge-Response
 
@@ -64,19 +64,20 @@ A complete PAM login flow has not been validated by the focused helper tests.
 
 ```
 echogate/
-├── README.md          # This file
-├── SOURCES.md         # Detailed references and bibliography
-├── LICENSE            # GPLv3
-├── echogate.py        # Main authentication script
-├── PKGBUILD           # Arch Linux package build
+â”œâ”€â”€ README.md          # This file
+â”œâ”€â”€ SOURCES.md         # Detailed references and bibliography
+â”œâ”€â”€ LICENSE            # GPLv3
+â”œâ”€â”€ echogate.py        # Main authentication script
+â”œâ”€â”€ PKGBUILD           # Arch Linux package build
 ```
 
 ## Dependencies
 
-- `vosk` — offline speech recognition
-- `espeak-ng` — text-to-speech for challenge generation
-- `python-pam` or `pam_exec` — Linux PAM integration
-- Tkinter (included with Python)
+The Arch package depends on Python, the official [python-vosk package](https://archlinux.org/packages/extra/x86_64/python-vosk/), python-sounddevice, espeak-ng and Tk. Pacman manages Vosk's native library and transitive Python dependencies. Packaging requires unzip; it does not run pip or install an incomplete private copy of Vosk.
+
+The small English model is downloaded only while building the package, and its SHA-256 is verified before extraction. Recognition uses the installed model offline. PKGBUILD also checks the local script checksum; update that checksum when changing the script.
+
+CI builds and installs the package in a disposable Arch container, imports its audio/UI dependencies and loads the model. These checks do not exercise a microphone, speech quality or a PAM login policy.
 
 ## License
 

@@ -11,3 +11,18 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m unittest discover -s tests -v
+  package:
+    runs-on: ubuntu-latest
+    container: archlinux:base
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify the Arch package
+        shell: bash
+        run: |
+          pacman -Syu --noconfirm --needed base-devel python-vosk python-sounddevice espeak-ng tk unzip
+          package_root=$(mktemp -d /tmp/echogate-package.XXXXXX)
+          cp PKGBUILD echogate.py "$package_root/"
+          chown -R nobody:nobody "$package_root"
+          runuser -u nobody -- env HOME="$package_root" bash -c 'cd "$1"; makepkg --noconfirm' _ "$package_root"
+          pacman -U --noconfirm "$package_root"/echogate-*.pkg.tar.zst
+          python -c "from vosk import Model; import sounddevice, tkinter; Model('/opt/echogate/model')"
