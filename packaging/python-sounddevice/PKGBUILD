@@ -1,0 +1,22 @@
+pkgname=python-sounddevice
+pkgver=0.5.6
+pkgrel=1
+pkgdesc='Python bindings for PortAudio'
+arch=('any')
+url='https://github.com/spatialaudio/python-sounddevice'
+license=('MIT')
+depends=('python' 'python-cffi' 'portaudio')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-setuptools-scm' 'python-wheel')
+source=('https://files.pythonhosted.org/packages/ec/db/0c890e2d9aab9ba284021efc02e1d3aebfecab1b611762d7434602209bcf/sounddevice-0.5.6.tar.gz')
+sha256sums=('8ec9fbfde2e32f020b167e348f3ab3bac6625a5f15af524d790108ac7147a410')
+
+build() {
+    cd "sounddevice-${pkgver}"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "sounddevice-${pkgver}"
+    python -m installer --destdir="${pkgdir}" dist/*.whl
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

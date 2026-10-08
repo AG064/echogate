@@ -75,6 +75,8 @@ echogate/
 
 The Arch package depends on Python, the official [python-vosk package](https://archlinux.org/packages/extra/x86_64/python-vosk/), python-sounddevice, espeak-ng and Tk. Pacman manages Vosk's native library and transitive Python dependencies. Packaging requires unzip; it does not run pip or install an incomplete private copy of Vosk.
 
+python-sounddevice is a separate dependency package outside the official Arch repositories. A checksum-pinned package recipe is supplied under packaging/python-sounddevice. Build and install it with makepkg and pacman before building EchoGate. Its runtime dependencies are python-cffi and PortAudio; its build uses python-build, python-installer, setuptools, setuptools-scm and wheel without downloading additional build dependencies.
+
 The small English model is downloaded only while building the package, and its SHA-256 is verified before extraction. Recognition uses the installed model offline. PKGBUILD also checks the local script checksum; update that checksum when changing the script.
 
 CI builds and installs the package in a disposable Arch container, imports its audio/UI dependencies and loads the model. These checks do not exercise a microphone, speech quality or a PAM login policy.
