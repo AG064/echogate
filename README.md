@@ -36,11 +36,15 @@ Following the HOWTO recommendations:
 1. System generates 3 random numbers
 2. Python script speaks them aloud (via `espeak-ng`) and displays GUI (Tkinter)
 3. Vosk engine recognizes the user's response in real time
-4. `pam_exec` integration — if voice matches the challenge, access is granted. If not, silently falls back to standard password input
+4. The script reports success only when the spoken digits match the current challenge. This result does not identify the speaker or grant access by itself. A separately verified authentication factor is still required, whether the challenge succeeds or fails.
 
 ### OS Integration
 
-Execution via `pam_exec`. Login flow is transparent to the user — works alongside standard Linux authentication.
+`pam_exec` can invoke the script, but its exit status reports only a challenge
+match. Do not make this result a sufficient authentication factor or use it to
+skip password verification. A failed, unavailable, or successful challenge must
+not bypass the separately verified factor required by the login policy.
+A complete PAM login flow has not been validated by the focused helper tests.
 
 ## Why These Solutions
 
@@ -53,7 +57,7 @@ Execution via `pam_exec`. Login flow is transparent to the user — works alongs
 ## Sources
 
 1. **Theoretical foundation:** Stephen Cook, ["Speech Recognition HOWTO" (v2.0, 2002)](http://tldp.org/HOWTO/Speech-Recognition-HOWTO/). Basic guide to ASR (Automatic Speech Recognition) architecture in Linux, audio digitization principles, and hardware.
-2. **Scientific justification:** Sarabjeet Singh, Yamini M., ["Voice Based Login Authentication For Linux" (IEEE, 2013)](https://ieeexplore.ieee.org/document/...). Paper proving the effectiveness of three-tier authentication and random phrase method for Replay attack protection.
+2. **Historical reference:** Sarabjeet Singh, Yamini M., ["Voice Based Login Authentication For Linux" (IEEE, 2013)](https://ieeexplore.ieee.org/document/...). Retained from the prototype documentation; this placeholder link is unverified and does not establish that EchoGate verifies speaker identity or presence.
 3. **Technical implementation:** EchoGate Project (2026). Documentation on integrating the lightweight Vosk engine into LainOS (Arch Linux) via PAM modules and Python.
 
 ## Project Structure
