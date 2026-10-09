@@ -26,8 +26,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import sys
 import os
 
-# Add custom library path for vosk installed via pip
-sys.path.append("/opt/echogate/libs")
 MODEL_PATH = "/opt/echogate/model"
 
 import secrets

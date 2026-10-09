@@ -1,0 +1,32 @@
+name: Challenge checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  challenge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -v
+  package:
+    runs-on: ubuntu-latest
+    container: archlinux:base
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify the Arch package
+        shell: bash
+        run: |
+          pacman -Syu --noconfirm --needed base-devel python-vosk espeak-ng tk unzip python-cffi portaudio python-build python-installer python-setuptools python-setuptools-scm python-wheel
+          package_root=$(mktemp -d /tmp/echogate-package.XXXXXX)
+          mkdir "$package_root/sounddevice" "$package_root/echogate"
+          cp packaging/python-sounddevice/PKGBUILD "$package_root/sounddevice/"
+          cp PKGBUILD echogate.py "$package_root/echogate/"
+          chown -R nobody:nobody "$package_root"
+          runuser -u nobody -- env HOME="$package_root" bash -c 'cd "$1"; makepkg --noconfirm' _ "$package_root/sounddevice"
+          pacman -U --noconfirm "$package_root"/sounddevice/python-sounddevice-*.pkg.tar.zst
+          runuser -u nobody -- env HOME="$package_root" bash -c 'cd "$1"; makepkg --noconfirm' _ "$package_root/echogate"
+          pacman -U --noconfirm "$package_root"/echogate/echogate-*.pkg.tar.zst
+          python -c "from vosk import Model; import sounddevice, tkinter; Model('/opt/echogate/model')"
